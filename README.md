@@ -2,8 +2,8 @@
 
 > Infraestructura AWS completa con Terraform, EKS, RDS y CI/CD automatizado
 
-[![CI/CD](https://github.com/Liquenson/aws-terraform-devops-lab/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/Liquenson/aws-terraform-devops-lab/actions/workflows/ci-cd.yml)
-[![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=Liquenson_aws-terraform-devops-lab&metric=alert_status)](https://sonarcloud.io/dashboard?id=Liquenson_aws-terraform-devops-lab)
+[![CI/CD](https://github.com/Liquenson/aws-terraform-devops/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/Liquenson/aws-terraform-devops/actions/workflows/ci-cd.yml)
+[![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=Liquenson_aws-terraform-devops&metric=alert_status)](https://sonarcloud.io/dashboard?id=Liquenson_aws-terraform-devops)
 [![Terraform](https://img.shields.io/badge/Terraform-1.9.8-7B42BC?logo=terraform)](https://www.terraform.io/)
 [![AWS](https://img.shields.io/badge/AWS-EKS%20%7C%20RDS%20%7C%20VPC-FF9900?logo=amazonaws)](https://aws.amazon.com/)
 
@@ -43,8 +43,8 @@ RDS MySQL (Multi-AZ)
 
 ```bash
 # 1. Clonar repositorio
-git clone https://github.com/Liquenson/aws-terraform-devops-lab.git
-cd aws-terraform-devops-lab
+git clone https://github.com/Liquenson/aws-terraform-devops.git
+cd aws-terraform-devops
 
 # 2. Configurar AWS
 aws configure
@@ -102,7 +102,7 @@ kubectl get nodes
 
 ## 🏗️ Estructura del Proyecto
 
-aws-terraform-devops-lab/
+aws-terraform-devops/
 ├── terraform/              # Configuración Terraform
 │   ├── main.tf            # Orquestación de módulos
 │   ├── variables.tf       # Variables de entrada
@@ -277,5 +277,5 @@ MIT License - Ver [LICENSE](LICENSE) para más detalles.
 
 ⭐ **¿Te resulta útil? ¡Dale una estrella!**
 
-**¿Preguntas?** Abre un [issue](https://github.com/Liquenson/aws-terraform-devops-lab/issues) o contáctame por [email](mailto:liquenson.cloud@gmail.com).
+**¿Preguntas?** Abre un [issue](https://github.com/Liquenson/aws-terraform-devops/issues) o contáctame por [email](mailto:liquenson.cloud@gmail.com).
 
