@@ -1,4 +1,4 @@
-# ☁️ AWS Terraform DevOps Lab
+# ☁️ AWS Terraform DevOps
 
 > Infraestructura AWS completa con Terraform, EKS, RDS y CI/CD automatizado
 
