@@ -256,7 +256,7 @@ kubectl port-forward svc/grafana 3000:3000 -n monitoring
 ## 👨‍💻 Autor
 
 **Liquenson Ruben Alexis**  
-*DevOps Engineer | AWS | Terraform | Kubernetes*
+DevOps Engineer | Cloud Engineer | AWS | Kubernetes | Terraform | GitOps
 
 - 📧 liquenson.cloud@gmail.com
 - 💼 [LinkedIn](https://www.linkedin.com/in/liquenson-ruben-490961269/)
