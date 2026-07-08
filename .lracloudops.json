@@ -1,0 +1,33 @@
+{
+  "name": "aws-terraform-devops",
+  "description": "Production-ready AWS infrastructure with 7 Terraform modules. Multi-AZ VPC, EKS 1.31, RDS PostgreSQL 15, ECR. Flask app deployed via Helm. ArgoCD GitOps. SonarCloud quality gate.",
+  "descriptionES": "Infraestructura AWS lista para producción con 7 módulos Terraform. VPC multi-AZ, EKS 1.31, RDS PostgreSQL 15, ECR. App Flask desplegada via Helm. GitOps con ArgoCD. Quality gate SonarCloud.",
+  "status": "Active",
+  "stats": {
+    "tfModules": 7,
+    "tfFiles": 26,
+    "tests": 18,
+    "commits": 71
+  },
+  "tags": ["Terraform", "AWS", "EKS", "Helm", "ArgoCD", "GitHub Actions", "Jenkins", "SonarCloud"],
+  "features": [
+    "Multi-AZ VPC with public/private subnets",
+    "EKS 1.31 with auto-scaling node groups",
+    "RDS PostgreSQL 15 — Multi-AZ with automated backups",
+    "ECR registry with lifecycle policies",
+    "Flask app deployed via Helm charts",
+    "ArgoCD GitOps — self-heal and auto-sync",
+    "GitHub Actions + Jenkins dual CI/CD",
+    "SonarCloud quality gate on every push"
+  ],
+  "featuresES": [
+    "VPC multi-AZ con subnets públicas y privadas",
+    "EKS 1.31 con grupos de nodos con auto-scaling",
+    "RDS PostgreSQL 15 — Multi-AZ con backups automáticos",
+    "Registro ECR con políticas de ciclo de vida",
+    "App Flask desplegada via Helm charts",
+    "ArgoCD GitOps — self-heal y auto-sync",
+    "CI/CD dual GitHub Actions + Jenkins",
+    "Quality gate SonarCloud en cada push"
+  ]
+}
