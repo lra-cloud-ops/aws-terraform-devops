@@ -1,0 +1,27 @@
+name: Notify lracloudops.com
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.lracloudops.json'
+      - 'README.md'
+      - '**/*.py'
+      - '**/*.tf'
+      - '**/*.sh'
+      - '**/*.yaml'
+      - '**/*.yml'
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger lracloudops.com rebuild
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" -d "" "${{ secrets.CLOUDFLARE_DEPLOY_HOOK_URL }}")
+          if [ "$response" = "200" ]; then
+            echo "Website rebuild triggered successfully"
+          else
+            echo "Failed to trigger rebuild (HTTP $response)"
+            exit 1
+          fi
