@@ -1,6 +1,6 @@
 # AWS Terraform DevOps
 
-Infraestructura AWS de estilo productivo, provisionada con Terraform, ejecutando una aplicación Flask contenedorizada en Amazon EKS con RDS MySQL, automatización CI/CD completa y observabilidad con Prometheus/Grafana.
+Infraestructura AWS de estilo productivo, provisionada con Terraform, ejecutando una aplicación Flask contenedorizada en Amazon EKS con RDS PostgreSQL, automatización CI/CD completa y observabilidad con Prometheus/Grafana.
 
 [![CI/CD](https://github.com/lra-cloud-ops/aws-terraform-devops/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/lra-cloud-ops/aws-terraform-devops/actions/workflows/ci-cd.yml)
 [![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=Liquenson_aws-terraform-devops-lab&metric=alert_status)](https://sonarcloud.io/dashboard?id=Liquenson_aws-terraform-devops-lab)
@@ -20,7 +20,7 @@ Este repositorio provisiona un entorno AWS completo mediante Infrastructure as C
 |---|---|
 | Aprovisionamiento | Terraform, diseño modular, state remoto en S3 con locking en DynamoDB |
 | Cómputo | Amazon EKS, node groups gestionados, HPA (2–10 pods) |
-| Datos | Amazon RDS MySQL, Multi-AZ, failover automático |
+| Datos | Amazon RDS PostgreSQL, encriptación en reposo |
 | Registro | Amazon ECR |
 | Redes | VPC en 3 AZs, segregación de subnets públicas/privadas |
 | CI/CD | GitHub Actions, autenticación AWS vía OIDC |
@@ -36,15 +36,15 @@ Internet → Load Balancer → Cluster EKS
                                 │
                           Flask App (2–10 pods, HPA)
                                 │
-                          RDS MySQL (Multi-AZ)
+                          RDS PostgreSQL
 ```
 
-- VPC con subnets públicas y privadas en 3 zonas de disponibilidad
-- EKS v1.29, node group gestionado con auto-scaling de 1 a 4 nodos
-- RDS MySQL, Multi-AZ, failover automático
-- ECR para imágenes de contenedores privadas
+- VPC con subnets públicas y privadas en 3 zonas de disponibilidad (`eu-west-1a/b/c`)
+- EKS v1.31, node group gestionado con auto-scaling de 1 a 4 nodos (`t3.small`)
+- RDS PostgreSQL 15, instancia `db.t3.micro`, almacenamiento gp3
+- ECR para imágenes de contenedores privadas, con lifecycle policy (retiene últimas 10 imágenes)
 - S3 + DynamoDB para state remoto y locking de Terraform
-- CloudWatch para logs y métricas centralizadas
+- CloudWatch para logs y métricas centralizadas (log group EKS, alarmas de CPU/memoria)
 
 ---
 
@@ -54,7 +54,7 @@ Internet → Load Balancer → Cluster EKS
 |---|---|
 | Terraform | 1.9.8+ |
 | AWS CLI | 2.x |
-| kubectl | 1.29+ |
+| kubectl | 1.31+ |
 | Docker | 24.x+ |
 | Python | 3.11+ |
 
@@ -74,7 +74,7 @@ aws configure
 
 # 3. Aprovisionar el backend de Terraform
 aws s3api create-bucket \
-  --bucket tfstate-devops-lab-rliquenson-euw1 \
+  --bucket devops-lab-tfstate-522921482434 \
   --region eu-west-1 \
   --create-bucket-configuration LocationConstraint=eu-west-1
 
@@ -87,9 +87,10 @@ aws dynamodb create-table \
 
 # 4. Aprovisionar infraestructura
 cd terraform/
+export TF_VAR_db_password="<contraseña-segura>"
 terraform init
-terraform plan
-terraform apply -auto-approve
+terraform plan -var-file=../environments/dev/terraform.tfvars
+terraform apply -var-file=../environments/dev/terraform.tfvars
 
 # 5. Configurar acceso al cluster
 aws eks update-kubeconfig --region eu-west-1 --name dev-cluster
@@ -102,24 +103,26 @@ kubectl get nodes
 
 ```
 aws-terraform-devops/
-├── terraform/              # Módulo raíz: orquestación, variables, outputs
-├── modules/                # Módulos Terraform reutilizables
+├── terraform/               # Módulo raíz: orquestación, backend, variables, outputs
+├── environments/            # Variables por entorno (dev, prod)
+├── modules/                 # Módulos Terraform reutilizables
 │   ├── vpc/
 │   ├── eks/
 │   ├── rds/
 │   ├── ecr/
 │   ├── iam/
-│   └── cloudwatch/
-├── docker/                 # Aplicación Flask
-│   ├── Dockerfile           # Build multi-stage
-│   └── src/app.py           # API REST (3 endpoints)
-├── kubernetes/              # Manifiestos de Kubernetes
-│   ├── deployment.yaml       # RollingUpdate, 2 réplicas
-│   ├── service.yaml           # LoadBalancer
-│   └── hpa.yaml                 # Auto-scaling 2–10 pods
-├── monitoring/              # Scripts de instalación Prometheus/Grafana
+│   ├── cloudwatch/
+│   └── s3_bucket/
+├── docker/                  # Aplicación Flask
+│   ├── Dockerfile            # Build multi-stage
+│   └── src/app.py            # API REST (3 endpoints)
+├── kubernetes/               # Manifiestos de Kubernetes
+│   ├── deployment.yaml        # RollingUpdate, 2 réplicas
+│   ├── service.yaml            # LoadBalancer
+│   └── hpa.yaml                  # Auto-scaling 2–10 pods
+├── monitoring/               # Scripts de instalación Prometheus/Grafana
 └── .github/workflows/
-    └── ci-cd.yml            # Definición del pipeline
+    └── ci-cd.yml             # Definición del pipeline
 ```
 
 ---
@@ -142,6 +145,8 @@ Cada push a `main` ejecuta:
 - Cero vulnerabilidades críticas
 - `terraform plan` exitoso
 - Build de Docker exitoso
+
+> El pipeline ejecuta `terraform plan`, no `apply` — el despliegue real de infraestructura se realiza manualmente.
 
 ### Autenticación con AWS
 
@@ -187,12 +192,13 @@ API REST Flask mínima:
 
 | Capa | Control |
 |---|---|
-| Red | Subnets privadas, security groups restrictivos |
-| IAM | Principio de mínimo privilegio |
+| Red | Subnets privadas, security groups restrictivos (PostgreSQL 5432 solo dentro de VPC) |
+| IAM | Principio de mínimo privilegio, roles dedicados para cluster y nodos EKS |
 | Secrets | GitHub Secrets — sin credenciales hardcodeadas |
 | Auth CI/CD | Federación OIDC, sin access keys estáticas |
 | Contenedores | Usuario no-root, imagen base mínima |
-| Datos | Encriptación en reposo (S3, RDS) |
+| Datos | Encriptación en reposo (S3 con AES256, RDS) |
+| Almacenamiento | Bucket S3 con versionado y bloqueo de acceso público |
 | Análisis estático | SonarCloud, Security Rating A |
 
 ---
@@ -207,7 +213,7 @@ kubectl port-forward svc/prometheus-server 9090:9090 -n monitoring
 kubectl port-forward svc/grafana 3000:3000 -n monitoring   # admin/admin
 ```
 
-Métricas: CPU/memoria de pods y nodos, request rate, latencia de endpoints, estado de health checks.
+Métricas: CPU/memoria de pods y nodos (alarmas CloudWatch en 80%/85%), request rate, latencia de endpoints, estado de health checks.
 
 ---
 
